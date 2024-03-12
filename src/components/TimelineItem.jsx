@@ -1,4 +1,4 @@
-import React from "react";
+// import React from "react";
 function TimelineItem({ years, title, duration, details }) {
   return (
     <ol className="flex flex-col md:flex-row relative border-l border-stone-200 dark:border-stone-700">
