@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows: ["Deploy"]
+    types:
+      - completed
 
 env:
   REGISTRY: registry.digitalocean.com/mohammedbabiker
@@ -22,7 +26,7 @@ jobs:
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
-        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
       - name: login into container registry
         run: doctl registry login --expiry-seconds 600
