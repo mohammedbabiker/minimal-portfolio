@@ -1,0 +1,40 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: registry.digitalocean.com/mohammedbabiker
+  IMAGE_NAME: "mohammedbabiker"
+  IMAGE_TAG: ${{ github.sha }}
+  REPOSITORY: mohammedbabiker
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: login into container registry
+        run: doctl registry login --expiry-seconds 600
+        # run: docker login registry.digitalocean.com --username ${{ secrets.DO_REGISTRY_TOKEN }} --password ${{ secrets.DO_REGISTRY_TOKEN }}
+
+      - name: Remove all old images
+        run: if [ ! -z "$(doctl registry repository list | grep "$(echo $IMAGE_NAME)")" ]; then doctl registry repository delete-manifest $(echo $IMAGE_NAME) $(doctl registry repository list-tags $(echo $IMAGE_NAME) | grep -o "sha.*") --force; else echo "No repository"; fi
+
+      - name: Build image
+        run: |
+          docker build . -t $REGISTRY/$REPOSITORY:$IMAGE_TAG
+      - name: Push image
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
